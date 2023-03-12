@@ -192,13 +192,6 @@ def get_key (user):
     return e,n
 
 
-
-p = " manal aime les patates."
-m = "manal"
-
-"""if m in p:
-    print(p)"""
-"""
 remove_user ("po")
 keep_private_key( "local_psw", "private_key")
 test_password( "local_psw")"""
