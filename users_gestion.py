@@ -92,7 +92,7 @@ def create_user_file( ftp, filename, name, public_key):
 #add_new_user( "po")
 
 
-def get_key (user)
+def get_key (user):
     dico = get_user_dictionary()
     string = dico[user]
     characters = "()"
