@@ -81,9 +81,10 @@ def test_password( local_psw):
                 decrypted_password = fer.decrypt(encrypted_password)
                 #print("aaaaa")
                 print(decrypted_password.decode("utf-8"))
+                return decrypted_password.decode("utf-8")
 
-
-    print("Mot de passe décoder avec succès!")
+        else : 
+            print("Error: Wrong password.")
 
 
 bits = 128
