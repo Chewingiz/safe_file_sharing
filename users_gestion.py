@@ -1,6 +1,10 @@
 import json
 import ftplib
 from rsa import gen_rsa_keypair
+import hashlib
+import getpass
+from cryptography.fernet import Fernet
+import base64
 
 with open("server_info.json") as my_file:
     json_str = my_file.read()
@@ -38,9 +42,53 @@ def get_user_dictionary():
     #print(user_dict)
     return user_dict
 
+def keep_private_key( local_psw, private_key):
+    hash1 = hashlib.sha256(local_psw.encode())
+    hash2 = hashlib.sha1(local_psw.encode())
+    print(hash1.hexdigest())
+    print(hash2.hexdigest())
+
+    # Stocker le hash du mot de passe principal dans un fichier principal.txt
+    with open("./local_autentification/local.txt", "w") as f:
+        f.write(hash2.hexdigest())
+
+    # Créer un objet Fernet pour encrypter/décrypter
+    f = Fernet(base64.b64encode(hash1.digest()[:32]))
+
+    # Encrypter le mot de passe protégé
+    encrypted_password = f.encrypt(private_key.encode("utf-8"))
+
+    # Stocker le mot de passe encrypté dans un fichier password.txt
+    with open("./local_autentification/private_key.txt", "wb") as f:
+        f.write(encrypted_password)
+
+    print("Mot de passe protégé stocké avec succès!")
+
+def test_password( local_psw):
+    hash1 = hashlib.sha256(local_psw.encode())
+    hash2 = hashlib.sha1(local_psw.encode())
+    print(hash1.hexdigest())
+    print(hash2.hexdigest())
+
+    # Stocker le hash du mot de passe principal dans un fichier principal.txt
+    with open("./local_autentification/local.txt", "r") as f:
+        code = f.read().strip()
+        if code == hash2.hexdigest() :
+            with open("./local_autentification/private_key.txt", "rb") as f2:
+                encrypted_password = f2.read().strip()
+                # Créer un objet Fernet pour encrypter/décrypter
+                fer = Fernet(base64.b64encode(hash1.digest()[:32]))
+                decrypted_password = fer.decrypt(encrypted_password)
+                #print("aaaaa")
+                print(decrypted_password.decode("utf-8"))
+
+
+    print("Mot de passe décoder avec succès!")
+
+
 bits = 128
 #create new user
-def add_new_user( name ):
+def add_new_user( name, local_psw ):
     ftp = ftplib.FTP(S_host_n)
     ftp.login(user = S_user_n, passwd = S_psw)
 
@@ -56,14 +104,14 @@ def add_new_user( name ):
         if name in users_dictionary:
             print("Error: A user already exists with this name.")
             return
-
-        # créé la clé
+      
         public_key, private_key = gen_rsa_keypair( bits )
+        keep_private_key( local_psw, private_key)
         add_user_in_file( ftp, filename, name, str(public_key))
 
     else:
-        # créé la clé
         public_key, private_key = gen_rsa_keypair( bits )
+        keep_private_key( local_psw, private_key)
         create_user_file( ftp, filename, name, str(public_key))
 
     ftp.quit()  
@@ -131,7 +179,6 @@ def remove_user (name):
         print("Error: user doesn't exist. ")
         return
 
-
     ftp.quit()  
 
 def get_key (user):
@@ -149,9 +196,12 @@ def get_key (user):
 p = " manal aime les patates."
 m = "manal"
 
-if m in p:
-    print(p)
+"""if m in p:
+    print(p)"""
+"""
 remove_user ("po")
+keep_private_key( "local_psw", "private_key")
+test_password( "local_psw")"""
 #int(dico["po"])
 #delete_file("users.json")
 #add_file( "users.json")
