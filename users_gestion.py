@@ -1,5 +1,6 @@
 import json
 import ftplib
+from rsa import gen_rsa_keypair
 
 with open("server_info.json") as my_file:
     json_str = my_file.read()
@@ -34,19 +35,16 @@ def get_user_dictionary():
         json_dict = my_file.read()
 
     user_dict = json.loads(json_dict)
-    print(user_dict)
+    #print(user_dict)
     return user_dict
 
+bits = 128
 #create new user
 def add_new_user( name ):
     ftp = ftplib.FTP(S_host_n)
     ftp.login(user = S_user_n, passwd = S_psw)
 
     filename = "users.json"
-
-
-    public_key = "0"
-    private_key = "1"
 
     if filename in ftp.nlst():
         #get file from server
@@ -60,11 +58,13 @@ def add_new_user( name ):
             return
 
         # créé la clé
-        add_user_in_file( ftp, filename, name, public_key)
+        public_key, private_key = gen_rsa_keypair( bits )
+        add_user_in_file( ftp, filename, name, str(public_key))
 
     else:
         # créé la clé
-        create_user_file( ftp, filename, name, public_key)
+        public_key, private_key = gen_rsa_keypair( bits )
+        create_user_file( ftp, filename, name, str(public_key))
 
     ftp.quit()  
 
@@ -89,8 +89,19 @@ def create_user_file( ftp, filename, name, public_key):
         new_file.write("{\n\t\"" + name + "\":\""+ public_key + "\"\n}")
     add_file( ftp, filename)
 
-add_new_user( "pomme de terre")
-#dico = get_user_dictionary()
-#print(dico['users'][0]["name"])
+#add_new_user( "po")
+
+
+def get_key (user)
+    dico = get_user_dictionary()
+    string = dico[user]
+    characters = "()"
+    string = ''.join( x for x in string if x not in characters)
+    e, n = string.split(',')
+    e = int(e)
+    n = int(n)
+    return e,n
+
+#int(dico["po"])
 #delete_file("users.json")
 #add_file( "users.json")
