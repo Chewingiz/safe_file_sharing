@@ -91,6 +91,48 @@ def create_user_file( ftp, filename, name, public_key):
 
 #add_new_user( "po")
 
+def remove_user (name):
+    ftp = ftplib.FTP(S_host_n)
+    ftp.login(user = S_user_n, passwd = S_psw)
+
+    filename = "users.json"
+
+    if filename in ftp.nlst():
+        #get file from server
+        with open(filename, 'wb') as fichier_local:
+            ftp.retrbinary('RETR ' + filename, fichier_local.write)
+
+        # get dictionary
+        users_dictionary = get_user_dictionary()
+        if name not in users_dictionary:
+            print("Error: user doesn't exist. ")
+            return
+
+
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+            
+            #trouver l'utilisateur envoyer son index
+            #suprimer de la liste la ligne
+            complete_name = "\""+name+"\""
+            for i in range(len(lines)):
+                if complete_name in lines[i]:
+                    print(lines[i])
+                    print(lines)
+                    del lines[i]
+                    print(lines)
+                    break
+        # Écrire le fichier mis à jour localement
+        with open(filename, 'w') as file:
+            file.writelines(lines) 
+        add_file( ftp, filename)
+
+    else:
+        print("Error: user doesn't exist. ")
+        return
+
+
+    ftp.quit()  
 
 def get_key (user):
     dico = get_user_dictionary()
@@ -102,6 +144,14 @@ def get_key (user):
     n = int(n)
     return e,n
 
+
+
+p = " manal aime les patates."
+m = "manal"
+
+if m in p:
+    print(p)
+remove_user ("po")
 #int(dico["po"])
 #delete_file("users.json")
 #add_file( "users.json")
