@@ -29,40 +29,68 @@ def delete_file( file_name):
     ftp.delete(file_name)
     ftp.quit() 
 
-#create new user
+def get_user_dictionary():
+    with open("users.json") as my_file:
+        json_dict = my_file.read()
 
-def add_new_user( name, public_key):
+    user_dict = json.loads(json_dict)
+    print(user_dict)
+    return user_dict
+
+#create new user
+def add_new_user( name ):
     ftp = ftplib.FTP(S_host_n)
     ftp.login(user = S_user_n, passwd = S_psw)
 
     filename = "users.json"
 
+
+    public_key = "0"
+    private_key = "1"
+
     if filename in ftp.nlst():
-        print("Le fichier existe sur le serveur FTP")
-        with open(filename, 'rb') as file:
-            lines = file.readlines()
-            # Supprimer la dernière ligne
-            lines.pop()
-            lines.pop()
-            
-            # Ajouter une nouvelle ligne
-            new_line = ("\t},\n\t{\n\t\t\"name\" : \"" + name + "\",\n\t\t\"public_key\" : \"" + public_key + "\"\n\t}\n]}").encode('utf-8')
-            lines.append(new_line)
+        #get file from server
+        with open(filename, 'wb') as fichier_local:
+            ftp.retrbinary('RETR ' + filename, fichier_local.write)
 
-            # Écrire le fichier mis à jour localement
-            with open(filename, 'wb') as file:
-                file.writelines(lines)
+        # get dictionary
+        users_dictionary = get_user_dictionary()
+        if name in users_dictionary:
+            print("Error: A user already exists with this name.")
+            return
 
-            add_file( ftp, filename)
+        # créé la clé
+        add_user_in_file( ftp, filename, name, public_key)
 
     else:
-        with open(filename, "w") as new_file:
-            new_file.write("{\n\t\"users\":[{\n\t\t\"name\" : \"" + name + "\",\n\t\t\"public_key\" : \"" + public_key + "\"\n\t}\n]}")
-
-        add_file( ftp, filename)
+        # créé la clé
+        create_user_file( ftp, filename, name, public_key)
 
     ftp.quit()  
 
-add_new_user( "name", "public_key")
+
+def add_user_in_file( ftp, filename, name, public_key):
+    with open(filename, 'rb') as file:
+        lines = file.readlines()
+        # Supprimer la dernière ligne
+        lines.pop()
+        
+        # Ajouter une nouvelle ligne
+        new_line = ("\t,\"" + name + "\":\""+ public_key + "\"\n}").encode('utf-8')
+        lines.append(new_line)
+    # Écrire le fichier mis à jour localement
+    with open(filename, 'wb') as file:
+        file.writelines(lines)
+
+    add_file( ftp, filename)
+
+def create_user_file( ftp, filename, name, public_key):
+    with open(filename, "w") as new_file:
+        new_file.write("{\n\t\"" + name + "\":\""+ public_key + "\"\n}")
+    add_file( ftp, filename)
+
+add_new_user( "pomme de terre")
+#dico = get_user_dictionary()
+#print(dico['users'][0]["name"])
 #delete_file("users.json")
 #add_file( "users.json")
