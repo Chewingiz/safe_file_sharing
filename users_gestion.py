@@ -191,7 +191,7 @@ def get_key (user):
     n = int(n)
     return e,n
 
-
+"""
 remove_user ("po")
 keep_private_key( "local_psw", "private_key")
 test_password( "local_psw")"""
