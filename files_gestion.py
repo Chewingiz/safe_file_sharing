@@ -50,9 +50,9 @@ def send_to(sender, receptionist, file_name ):
         message = file.read()
         ciphertext, tag = encrypt(message, key)
         with open("key_" + file_name, "w") as file2:
-            file2.write("{\n\t\"sender\":" + sender  + "\n\t\"key\":" + enc_key  + "\n\t\"signature\":" + signature + "\n\t\"tag\":" + tag + " }")
+            file2.write("{\n\t\"sender\":" + sender  + ",\n\t\"key\":" + enc_key  + ",\n\t\"signature\":" + signature + ",\n\t\"tag\":" + tag + " \n}")
         with open("enc_" + file_name, "w") as file3:
-            file2.write(ciphertext)
+            file3.write(ciphertext)
     ftp.cwd("./" + receptionist)
 
     add_file( ftp, "enc_" + file_name)
@@ -60,16 +60,30 @@ def send_to(sender, receptionist, file_name ):
 
     ftp.cwd("..")
     #test #rsa_verify(signature, sender_public_key)==h(m)
-"""
-def get_file(file_name)
-    my_private_key = 0 # get from test_password( local_psw)
 
+def get_file(file_name):
+    my_private_key = 0 # get from test_password( local_psw)
 
     with open("key_" + file_name) as my_file:
         json_key = my_file.read()
 
     file_info_dict = json.loads(json_key)
-    
-    return user_dict
 
-"""
+    enc_key = file_info_dict["key"]
+    signature = file_info_dict["signature"]
+    sender_public_key = get_key(file_info_dict["sender"])
+    tag = file_info_dict["tag"]
+
+    if (rsa_verify(signature, sender_public_key) == h(enc_key)):
+        print("code autentique")
+        key = rsa_dec(enc_key,my_private_key)
+        with open("enc_" + file_name, "r") as file:
+            enc_message = file.read()
+            dec_message = decrypt(enc_message.encode() , tag, key)
+            with open(file_name, "w") as file2:
+                file2.write(dec_message.decode())
+    else :
+        print("message non authentique " )
+    
+   
+
