@@ -6,19 +6,6 @@ import os
 
 from users_gestion import get_key
 
-with open("server_info.json") as my_file:
-    json_str = my_file.read()
-
-py_dict = json.loads(json_str)
-
-type(py_dict)
-
-# Server informations
-S_host_n = py_dict["host_name"]
-S_user_n = py_dict["username"]
-S_psw    = py_dict["password"]
-
-
 def generate_key():
     return os.urandom(16)
 
@@ -34,9 +21,9 @@ def decrypt(ciphertext, tag, key):
     plaintext = cipher.decrypt_and_verify(ciphertext, tag)
     return plaintext
 
-def send_to(sender, receptionist, file_name ):
-    ftp = ftplib.FTP(S_host_n)
-    ftp.login(user = S_user_n, passwd = S_psw)
+def send_to(ftp, sender, receptionist, file_name ):
+    """ftp = ftplib.FTP(S_host_n)
+    ftp.login(user = S_user_n, passwd = S_psw)"""
 
     receptionist_public_key = get_key(receptionist)
     sender_public_key = get_key(sender)
@@ -61,7 +48,7 @@ def send_to(sender, receptionist, file_name ):
     ftp.cwd("..")
     #test #rsa_verify(signature, sender_public_key)==h(m)
 
-def get_file(file_name):
+def get_file(ftp, file_name):
     my_private_key = 0 # get from test_password( local_psw)
 
     with open("key_" + file_name) as my_file:
@@ -84,6 +71,3 @@ def get_file(file_name):
                 file2.write(dec_message.decode())
     else :
         print("message non authentique " )
-    
-   
-

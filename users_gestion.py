@@ -6,33 +6,16 @@ import getpass
 from cryptography.fernet import Fernet
 import base64
 
-with open("server_info.json") as my_file:
-    json_str = my_file.read()
-
-py_dict = json.loads(json_str)
-
-type(py_dict)
-
-# Server informations
-S_host_n = py_dict["host_name"]
-S_user_n = py_dict["username"]
-S_psw    = py_dict["password"]
-
-
 
 def add_file(ftp, file_name):
     with open(file_name, "rb") as file:
         ftp.storbinary("STOR " + file_name, file)
 
 #delete file
-def delete_file( file_name):
+def delete_file(ftp, file_name):
     #supprimer un fichier
-    ftp = ftplib.FTP(S_host_n)
-    ftp.login(user = S_user_n, passwd = S_psw)
-
-    ftp.cwd(".") # changez le chemin vers le répertoire contenant votre fichier
     ftp.delete(file_name)
-    ftp.quit() 
+    #ftp.quit() 
 
 def get_user_dictionary():
     with open("users.json") as my_file:
@@ -89,9 +72,9 @@ def test_password( local_psw):
 
 bits = 128
 #create new user
-def add_new_user( name, local_psw ):
-    ftp = ftplib.FTP(S_host_n)
-    ftp.login(user = S_user_n, passwd = S_psw)
+def add_new_user(ftp, name, local_psw ):
+    """ftp = ftplib.FTP(S_host_n)
+    ftp.login(user = S_user_n, passwd = S_psw)"""
 
     filename = "users.json"
 
@@ -116,7 +99,7 @@ def add_new_user( name, local_psw ):
         keep_private_key( local_psw, private_key)
         create_user_file( ftp, filename, name, str(public_key))
         ftp.mkd(name)
-    ftp.quit()  
+    #ftp.quit()  
 
 
 def add_user_in_file( ftp, filename, name, public_key):
