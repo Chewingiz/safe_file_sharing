@@ -45,8 +45,8 @@ def get_user_dictionary():
 def keep_private_key( local_psw, private_key):
     hash1 = hashlib.sha256(local_psw.encode())
     hash2 = hashlib.sha1(local_psw.encode())
-    print(hash1.hexdigest())
-    print(hash2.hexdigest())
+    #print(hash1.hexdigest())
+    #print(hash2.hexdigest())
 
     # Stocker le hash du mot de passe principal dans un fichier principal.txt
     with open("./local_autentification/local.txt", "w") as f:
@@ -67,8 +67,8 @@ def keep_private_key( local_psw, private_key):
 def test_password( local_psw):
     hash1 = hashlib.sha256(local_psw.encode())
     hash2 = hashlib.sha1(local_psw.encode())
-    print(hash1.hexdigest())
-    print(hash2.hexdigest())
+    #print(hash1.hexdigest())
+    #print(hash2.hexdigest())
 
     # Stocker le hash du mot de passe principal dans un fichier principal.txt
     with open("./local_autentification/local.txt", "r") as f:
@@ -79,7 +79,7 @@ def test_password( local_psw):
                 # Créer un objet Fernet pour encrypter/décrypter
                 fer = Fernet(base64.b64encode(hash1.digest()[:32]))
                 decrypted_password = fer.decrypt(encrypted_password)
-                #print("aaaaa")
+
                 print(decrypted_password.decode("utf-8"))
                 return decrypted_password.decode("utf-8")
 
@@ -109,12 +109,13 @@ def add_new_user( name, local_psw ):
         public_key, private_key = gen_rsa_keypair( bits )
         keep_private_key( local_psw, private_key)
         add_user_in_file( ftp, filename, name, str(public_key))
+        ftp.mkd(name)
 
     else:
         public_key, private_key = gen_rsa_keypair( bits )
         keep_private_key( local_psw, private_key)
         create_user_file( ftp, filename, name, str(public_key))
-
+        ftp.mkd(name)
     ftp.quit()  
 
 
@@ -166,10 +167,7 @@ def remove_user (name):
             complete_name = "\""+name+"\""
             for i in range(len(lines)):
                 if complete_name in lines[i]:
-                    print(lines[i])
-                    print(lines)
                     del lines[i]
-                    print(lines)
                     break
         # Écrire le fichier mis à jour localement
         with open(filename, 'w') as file:
