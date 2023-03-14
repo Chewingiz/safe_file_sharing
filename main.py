@@ -1,4 +1,4 @@
-from users_gestion import add_new_user
+from users_gestion import add_new_user, delete_file, test_password
 from files_gestion import send_to, get_file
 import json
 import ftplib
@@ -17,5 +17,28 @@ S_psw    = py_dict["password"]
 if __name__=='__main__':
     ftp = ftplib.FTP(S_host_n)
     ftp.login(user = S_user_n, passwd = S_psw)
+    print("OK")
+    
+    
+    #Reinit for tests
+    #delete_file(ftp,"users.json") 
+    print("OK")
+    add_new_user(ftp, "Beatrice", "MotDePasse123")
+    print("OK")
+    add_new_user(ftp, "Anais", "MotDePasse")
+    print("OK")
+
+    #log in
+    Anais_private_key = test_password("Anais", "MotDePasse")
+    print("OK")
+    Beatrice_private_key = test_password("Anais", "MotDePasse")
+    print("OK")
+
+
+    send_to(ftp, "Anais", Anais_private_key, "Beatrice",Beatrice_private_key, "test.txt")
+    print("OK")
+    get_file(ftp, Beatrice_private_key, "test.txt")
 
     ftp.quit() 
+
+    

@@ -1,10 +1,11 @@
 import json
 import ftplib
+import base64
 from rsa import rsa_enc, rsa_dec, rsa_sign, rsa_verify, h 
 from Crypto.Cipher import AES
 import os
 
-from users_gestion import get_key
+from users_gestion import get_key, add_file
 
 def generate_key():
     return os.urandom(16)
@@ -13,32 +14,42 @@ def generate_key():
 
 def encrypt(message, key):
     cipher = AES.new(key, AES.MODE_EAX)
+    #print(type(message))
     ciphertext, tag = cipher.encrypt_and_digest(message)
+
+    #ciphertext, tag = cipher.encrypt_and_digest(bytes(message))
     return ciphertext, tag
 
 def decrypt(ciphertext, tag, key):
-    cipher = AES.new(key, AES.MODE_EAX, nonce=cipher.nonce)
+    cipher = AES.new(key, AES.MODE_EAX, nonce=os.urandom(12))
     plaintext = cipher.decrypt_and_verify(ciphertext, tag)
     return plaintext
 
-def send_to(ftp, sender, receptionist, file_name ):
+def send_to(ftp, sender, sender_private_key, receptionist, receptionist_private_key, file_name ):
     """ftp = ftplib.FTP(S_host_n)
     ftp.login(user = S_user_n, passwd = S_psw)"""
 
     receptionist_public_key = get_key(receptionist)
     sender_public_key = get_key(sender)
-    sender_private_key = 0 # get from test_password( local_psw)
+    #sender_private_key = 0 # get from test_password( local_psw)
 
     key = generate_key()
-    enc_key = rsa_enc(key, receptionist_public_key)
+    print(type(key))
+    print(str(base64.b64encode(key).decode('utf-8')))
+    print(str(key))
+    #enc_key = rsa_enc(str(key), receptionist_public_key)
+    enc_key = rsa_enc( repr(str(key)), receptionist_public_key)
     signature = rsa_sign(enc_key, sender_private_key)
+    key2 = rsa_dec(enc_key, receptionist_private_key)
+    print(key2)
 
-    with open(file_name, "r") as file:
+    with open(file_name, "rb") as file:
         message = file.read()
+        #(type(message))
         ciphertext, tag = encrypt(message, key)
         with open("key_" + file_name, "w") as file2:
-            file2.write("{\n\t\"sender\":" + sender  + ",\n\t\"key\":" + enc_key  + ",\n\t\"signature\":" + signature + ",\n\t\"tag\":" + tag + " \n}")
-        with open("enc_" + file_name, "w") as file3:
+            file2.write("{\n\t\"sender\":\"" + sender  + "\",\n\t\"key\":\"" + str(enc_key)  + "\",\n\t\"signature\":\"" + str(signature) + "\",\n\t\"tag\":\"" + str(base64.b64encode(tag).decode('utf-8')) + "\" \n}")
+        with open("enc_" + file_name, "wb") as file3:
             file3.write(ciphertext)
     ftp.cwd("./" + receptionist)
 
@@ -48,26 +59,32 @@ def send_to(ftp, sender, receptionist, file_name ):
     ftp.cwd("..")
     #test #rsa_verify(signature, sender_public_key)==h(m)
 
-def get_file(ftp, file_name):
-    my_private_key = 0 # get from test_password( local_psw)
+def get_file(ftp, my_private_key, file_name):
+    #my_private_key = 0 # get from test_password( local_psw)
 
     with open("key_" + file_name) as my_file:
         json_key = my_file.read()
 
     file_info_dict = json.loads(json_key)
 
-    enc_key = file_info_dict["key"]
-    signature = file_info_dict["signature"]
+    enc_key = int(file_info_dict["key"])
+    signature = int(file_info_dict["signature"])
     sender_public_key = get_key(file_info_dict["sender"])
-    tag = file_info_dict["tag"]
+    tag =  base64.b64decode(file_info_dict["tag"])
+    print("")
+    print(enc_key)
+    print("")
+    
+   #print(key)
 
     if (rsa_verify(signature, sender_public_key) == h(enc_key)):
         print("code autentique")
-        key = rsa_dec(enc_key,my_private_key)
-        with open("enc_" + file_name, "r") as file:
+        key = rsa_dec(enc_key, my_private_key)
+        print(key)
+        with open("enc_" + file_name, "rb") as file:
             enc_message = file.read()
-            dec_message = decrypt(enc_message.encode() , tag, key)
-            with open(file_name, "w") as file2:
+            dec_message = decrypt(enc_message , tag, key)
+            with open("dec_" + file_name, "w") as file2:
                 file2.write(dec_message.decode())
     else :
         print("message non authentique " )

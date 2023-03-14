@@ -5,7 +5,9 @@ import hashlib
 import getpass
 from cryptography.fernet import Fernet
 import base64
+import os
 
+bits = 2048
 
 def add_file(ftp, file_name):
     with open(file_name, "rb") as file:
@@ -25,58 +27,60 @@ def get_user_dictionary():
     #print(user_dict)
     return user_dict
 
-def keep_private_key( local_psw, private_key):
+def keep_private_key(user_name, local_psw, private_key):
     hash1 = hashlib.sha256(local_psw.encode())
     hash2 = hashlib.sha1(local_psw.encode())
     #print(hash1.hexdigest())
     #print(hash2.hexdigest())
 
     # Stocker le hash du mot de passe principal dans un fichier principal.txt
-    with open("./local_autentification/local.txt", "w") as f:
+    with open("./local_autentification/" + user_name + "/local.txt", "w") as f:
         f.write(hash2.hexdigest())
 
     # Créer un objet Fernet pour encrypter/décrypter
     f = Fernet(base64.b64encode(hash1.digest()[:32]))
 
     # Encrypter le mot de passe protégé
-    encrypted_password = f.encrypt(private_key.encode("utf-8"))
+    encrypted_password = f.encrypt(str(private_key).encode("utf-8"))
 
     # Stocker le mot de passe encrypté dans un fichier password.txt
-    with open("./local_autentification/private_key.txt", "wb") as f:
+    with open("./local_autentification/" + user_name + "/private_key.txt", "wb") as f:
         f.write(encrypted_password)
 
     print("Mot de passe protégé stocké avec succès!")
 
-def test_password( local_psw):
+def test_password( user_name, local_psw):
     hash1 = hashlib.sha256(local_psw.encode())
     hash2 = hashlib.sha1(local_psw.encode())
     #print(hash1.hexdigest())
     #print(hash2.hexdigest())
 
     # Stocker le hash du mot de passe principal dans un fichier principal.txt
-    with open("./local_autentification/local.txt", "r") as f:
+    with open("./local_autentification/" + user_name + "/local.txt", "r") as f:
         code = f.read().strip()
         if code == hash2.hexdigest() :
-            with open("./local_autentification/private_key.txt", "rb") as f2:
+            with open("./local_autentification/" + user_name + "/private_key.txt", "rb") as f2:
                 encrypted_password = f2.read().strip()
                 # Créer un objet Fernet pour encrypter/décrypter
                 fer = Fernet(base64.b64encode(hash1.digest()[:32]))
                 decrypted_password = fer.decrypt(encrypted_password)
 
-                print(decrypted_password.decode("utf-8"))
-                return decrypted_password.decode("utf-8")
+                #print(type(decrypted_password.decode("utf-8")))
+                return get_key_from_str(decrypted_password.decode("utf-8"))
 
         else : 
             print("Error: Wrong password.")
 
 
-bits = 128
+
 #create new user
 def add_new_user(ftp, name, local_psw ):
     """ftp = ftplib.FTP(S_host_n)
     ftp.login(user = S_user_n, passwd = S_psw)"""
 
     filename = "users.json"
+    if not os.path.exists("./local_autentification"):
+            os.makedirs("./local_autentification")
 
     if filename in ftp.nlst():
         #get file from server
@@ -90,13 +94,21 @@ def add_new_user(ftp, name, local_psw ):
             return
       
         public_key, private_key = gen_rsa_keypair( bits )
-        keep_private_key( local_psw, private_key)
+
+        if not os.path.exists("./local_autentification/" + name):
+            os.makedirs("./local_autentification/" + name)
+
+        keep_private_key( name, local_psw, private_key)
         add_user_in_file( ftp, filename, name, str(public_key))
         ftp.mkd(name)
 
     else:
         public_key, private_key = gen_rsa_keypair( bits )
-        keep_private_key( local_psw, private_key)
+
+        if not os.path.exists("./local_autentification/" + name):
+            os.makedirs("./local_autentification/" + name)
+
+        keep_private_key( name, local_psw, private_key)
         create_user_file( ftp, filename, name, str(public_key))
         ftp.mkd(name)
     #ftp.quit()  
@@ -166,13 +178,16 @@ def remove_user (name):
 def get_key (user):
     dico = get_user_dictionary()
     string = dico[user]
+    return get_key_from_str(string)
+    
+
+def get_key_from_str(key_string):
     characters = "()"
-    string = ''.join( x for x in string if x not in characters)
-    e, n = string.split(',')
+    key_string = ''.join( x for x in key_string if x not in characters)
+    e, n = key_string.split(',')
     e = int(e)
     n = int(n)
-    return e,n
-
+    return (e,n)
 """
 remove_user ("po")
 keep_private_key( "local_psw", "private_key")
