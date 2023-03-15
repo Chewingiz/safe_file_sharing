@@ -29,10 +29,10 @@ Create a file named "server_info.json" with the following contents:
 }
 ```
 Where:
-	- Hostname: Hostname or IP.
-	- Port: Port.
-	- Username: Username.
-	- Password: Password.
+       - Hostname: Hostname or IP.  
+       - Port: Port.  
+       - Username: Username.  
+       - Password: Password.  
 
 ## Functions
 There is no GUI yet, so here is an explanation of the main functions:
