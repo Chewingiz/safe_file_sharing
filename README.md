@@ -28,7 +28,7 @@ Create a file named "server_info.json" with the following contents:
 "password": "Password"
 }
 ```
-Where:
+Where:  
        - Hostname: Hostname or IP.  
        - Port: Port.  
        - Username: Username.  
