@@ -11,11 +11,13 @@ type(py_dict)
 
 # Server informations
 S_host_n = py_dict["host_name"]
+S_port   = int(py_dict["port"])
 S_user_n = py_dict["username"]
 S_psw    = py_dict["password"]
 
 if __name__=='__main__':
-    ftp = ftplib.FTP(S_host_n)
+    ftp = ftplib.FTP()
+    ftp.connect(S_host_n, S_port)
     ftp.login(user = S_user_n, passwd = S_psw)
     print("OK")
     
