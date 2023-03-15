@@ -1,14 +1,7 @@
 from Crypto.Util.number import getPrime,inverse
 from math import gcd
 from hashlib import sha256
-
-
-
-
-
-
-
-
+import os
 
 def gen_rsa_keypair( bits ):
     e=65537
@@ -26,6 +19,13 @@ def gen_rsa_keypair( bits ):
     return ((e,n),(d,n))
 
 
+"""
+Pour assurer l’authenticité d’un message, son émetteur peut utiliser RSA pour le signer.
+▶ Pour cela il lui suffit de chiffrer un condensé (un hash) du message avec sa clef privée :
+𝑠 = 𝐻(𝑚)𝑑 mod 𝑛.
+▶ Le message signé est alors (𝑚, 𝑠).
+
+"""
 def rsa (msg, key):
     e,n=key
     assert(msg<n)
@@ -36,9 +36,9 @@ def rsa_enc (msg,key):
 	return rsa(int.from_bytes(msg.encode('utf-8'), 'big'), key)
 
 def rsa_dec(enc_msg,key):
-	msg=rsa(enc_msg,key)
-	msg=msg.to_bytes((msg.bit_length() + 7) // 8, 'big').decode('utf-8')
-	return msg
+ 	msg=rsa(enc_msg,key)
+ 	msg=msg.to_bytes((msg.bit_length() + 7) // 8, 'big').decode('utf-8')
+ 	return msg
 
 
 def conv_test(msg_a, msg_b):
@@ -79,23 +79,22 @@ def conv_test_s(msg_a, msg_b):
 	key_B_p,key_B_s = key_B
 	
 	print("Bob souhaite envoyer le message: \""+ msg_a +"\" signé à Alice")
-	msg_a_enc = rsa_enc(msg_a, key_A_s)
-	msg_a_s = rsa_sign(msg_a_enc,key_B_p)
+	msg_a_enc = rsa_enc(msg_a, key_A_p)
+	msg_a_s = rsa_sign(msg_a_enc,key_B_s)
 	#print(msg_a_s)
 	msg_a_enc_s = (msg_a_enc,msg_a_s)
 	
+	print(len(str(msg_a)))
 	m=msg_a_enc_s[0]
+	print(len(str(m)))
 	s=msg_a_enc_s[1]
 	
 	
-	
-	if(rsa_verify(s,key_B_s)==h(m)):
-		print("Alice reçois le message: \""+ rsa_dec(m,key_A_p) +"\" de Bob")
+	print(type(m))
+	if(rsa_verify(s,key_B_p)==h(m)):
+		print("Alice reçois le message: \""+ rsa_dec(m,key_A_s) +"\" de Bob")
 	else: 
 		print("message non authentique " + rsa_dec(m,key_A_p))
-
-
-
 
 
 

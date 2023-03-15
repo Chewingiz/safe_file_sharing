@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 import base64
 import os
 
-bits = 2048
+bits = 1024
 
 def add_file(ftp, file_name):
     with open(file_name, "rb") as file:
@@ -32,6 +32,7 @@ def keep_private_key(user_name, local_psw, private_key):
     hash2 = hashlib.sha1(local_psw.encode())
     #print(hash1.hexdigest())
     #print(hash2.hexdigest())
+     #print("PK " + user_name + "= " + str(private_key))
 
     # Stocker le hash du mot de passe principal dans un fichier principal.txt
     with open("./local_autentification/" + user_name + "/local.txt", "w") as f:

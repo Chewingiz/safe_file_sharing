@@ -22,21 +22,21 @@ if __name__=='__main__':
     
     #Reinit for tests
     #delete_file(ftp,"users.json") 
-    print("OK")
+    #print("OK")
     add_new_user(ftp, "Beatrice", "MotDePasse123")
-    print("OK")
+    #print("OK")
     add_new_user(ftp, "Anais", "MotDePasse")
-    print("OK")
+    #print("OK")
 
     #log in
     Anais_private_key = test_password("Anais", "MotDePasse")
-    print("OK")
-    Beatrice_private_key = test_password("Anais", "MotDePasse")
-    print("OK")
+    #print("OK")
+    Beatrice_private_key = test_password("Beatrice", "MotDePasse123")
+    #print("OK")
 
 
     send_to(ftp, "Anais", Anais_private_key, "Beatrice",Beatrice_private_key, "test.txt")
-    print("OK")
+   # print("OK")
     get_file(ftp, Beatrice_private_key, "test.txt")
 
     ftp.quit() 
