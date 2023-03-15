@@ -14,6 +14,7 @@ def generate_key():
     return os.urandom(16)
 
 #AES
+""" Encrypt message with AES in GCM mode"""
 def encrypt(message, key):
     iv = os.urandom(16)
     cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
@@ -21,58 +22,57 @@ def encrypt(message, key):
     ciphertext, tag = cipher.encrypt_and_digest(padded_message)
     return (ciphertext, iv, tag)
 
+""" Decrypt message with AES in GCM mode"""
 def decrypt(ciphertext, tag, key, iv):
     cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
     padded_plaintext = cipher.decrypt_and_verify(ciphertext, tag)
     plaintext = unpad(padded_plaintext, AES.block_size, style='pkcs7')
     return plaintext
 
-
-def send_to(ftp, sender, sender_private_key, receptionist, receptionist_private_key, file_name ):
-
+"""Send file from sender to receptionist"""
+def send_to(ftp, sender, sender_private_key, receptionist, file_name ):
     receptionist_public_key = get_key(receptionist)
-
     sender_public_key = get_key(sender)
 
     key = generate_key()
-    enc_key = rsa_enc( repr(key), receptionist_public_key)
+    enc_key = rsa_enc( repr(key), receptionist_public_key) # encrypt key as raw string
     signature = rsa_sign(enc_key, sender_private_key)
-    key2 = rsa_dec(enc_key, receptionist_private_key)
 
     with open(file_name, "rb") as file:
         message = file.read()
         #(type(message))
         ciphertext, iv, tag = encrypt(message, key)
-
    
-        with open("key_" + file_name, "w") as file2:
+        with open("key_" + file_name, "w") as file2: # Create json withh informations to decrypt message
             file2.write("{\n\t\"sender\":\"" + sender  + "\",\n\t\"key\":\"" + str(enc_key)  + "\",\n\t\"iv\":\"" + str(base64.b64encode(iv).decode('utf-8'))  + "\",\n\t\"signature\":\"" + str(signature) + "\",\n\t\"tag\":\"" + str(base64.b64encode(tag).decode('utf-8')) + "\" \n}")
-        with open("enc_" + file_name, "wb") as file3:
-
+        with open("enc_" + file_name, "wb") as file3: # Writes encrypted message
             file3.write(ciphertext)
     ftp.cwd("./" + receptionist)
     add_file( ftp, "enc_" + file_name)
     add_file( ftp, "key_" + file_name)
     ftp.cwd("..")
 
-def get_file(ftp,name, my_private_key, file_name):
+""" 
+Get files from server, decrypt file and store it as dec_filename
+Tests autenticity of the key and the file 
+"""
+def get_file(ftp, name, my_private_key, file_name):
     ftp.cwd("./" + name)
     with open("enc_" + file_name, 'wb') as fichier_local:
         ftp.retrbinary('RETR ' + "enc_" + file_name, fichier_local.write)
     with open("key_" + file_name, 'wb') as fichier_local:
         ftp.retrbinary('RETR ' + "key_" + file_name, fichier_local.write)
     ftp.cwd("..")
+
     with open("key_" + file_name) as my_file:
         json_key = my_file.read()
 
     file_info_dict = json.loads(json_key)
-
     enc_key = int(file_info_dict["key"])
     signature = int(file_info_dict["signature"])
     sender_public_key = get_key(file_info_dict["sender"])
-    tag =  base64.b64decode(file_info_dict["tag"])
-    iv = base64.b64decode(file_info_dict["iv"])
-
+    tag =  base64.b64decode(file_info_dict["tag"]) # to test autenticity of the file
+    iv = base64.b64decode(file_info_dict["iv"]) 
 
     if (rsa_verify(signature, sender_public_key) == h(enc_key)):
         print("code autentique")
