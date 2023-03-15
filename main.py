@@ -37,7 +37,7 @@ if __name__=='__main__':
 
     send_to(ftp, "Anais", Anais_private_key, "Beatrice",Beatrice_private_key, "test.txt")
    # print("OK")
-    get_file(ftp, Beatrice_private_key, "test.txt")
+    get_file(ftp,"Beatrice", Beatrice_private_key, "test.txt")
 
     ftp.quit() 
 
