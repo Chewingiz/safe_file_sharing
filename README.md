@@ -1,5 +1,5 @@
 # safe_file_sharing
-Python app to share files.
+Python app to share .txt files.
 
 # Principle
 
